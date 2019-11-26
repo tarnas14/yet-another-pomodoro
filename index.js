@@ -100,12 +100,14 @@ const yapFactory = (now, storageFilePath = path.join(os.homedir(), '.yap')) => {
     currentState.end = defaultState.end
   }
 
+  const outsidePomodoro = () => !(currentState.state === STATE.POMODORO && currentState.inProgress)
+
   const persist = () => {
     const {sessionCounter, state, start, end} = currentState
 
-    fs.writeFileSync(storageFilePath, JSON.stringify({
+    fs.writeFile(storageFilePath, JSON.stringify({
       sessionCounter, state, start, end
-    }))
+    }), () => null)
   }
 
   const getStringState = () => {
@@ -122,6 +124,7 @@ const yapFactory = (now, storageFilePath = path.join(os.homedir(), '.yap')) => {
     reset,
     persist,
     getStringState,
+    outsidePomodoro,
     debug: () => console.log(currentState)
   }
 }
@@ -163,6 +166,15 @@ program
     const yap = yapFactory(now, program.file)
     yap.next()
     onExit(yap)
+  });
+
+program
+  .command('outside-pomodoro')
+  .action(() => {
+    const yap = yapFactory(now, program.file)
+    const result = yap.outsidePomodoro()
+
+    process.exitCode = result ? 0 : 1
   });
 
 program
