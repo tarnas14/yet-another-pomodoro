@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/tarnas14/yet-another-pomodoro/issues"
   },
-  "homepage": "https://github.com/tarnas14/yet-another-pomodoro#readme"
+  "homepage": "https://github.com/tarnas14/yet-another-pomodoro#readme",
+  "dependencies": {
+    "commander": "^4.0.1",
+    "pretty-ms": "^5.1.0"
+  }
 }
