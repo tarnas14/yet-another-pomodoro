@@ -1,5 +1,15 @@
 # Yet Another Pomodoro
 
+## installation
+
+```
+npm i -g yet-another-pomodoro
+```
+
+## usage
+
+TODO
+
 ## Mission statement (initial commit)
 
 Problem to solve:
