@@ -11,6 +11,7 @@ const packageJson = require('./package.json')
 program.version(packageJson.version)
 
 program.option('-d, --debug', 'output extra debugging')
+program.option('-f, --file <file>', 'force file')
 
 const STATE = {
   POMODORO: 'POMODORO',
@@ -125,39 +126,51 @@ const yapFactory = (now, storageFilePath = path.join(os.homedir(), '.yap')) => {
   }
 }
 
-const yap = yapFactory((new Date()).getTime())
+const now = (new Date()).getTime()
+
+const onExit = yapInstance => {
+  program.debug && yapInstance.debug()
+  yapInstance.persist()
+}
 
 program
   .command('start')
   .action(() => {
+    const yap = yapFactory(now, program.file)
     yap.start()
+    onExit(yap)
   });
 
 program
   .command('stop')
   .action(() => {
+    const yap = yapFactory(now, program.file)
     yap.stop()
+    onExit(yap)
   });
 
 program
   .command('reset')
   .action(() => {
+    const yap = yapFactory(now, program.file)
     yap.reset()
+    onExit(yap)
   });
 
 program
   .command('next')
   .action(() => {
+    const yap = yapFactory(now, program.file)
     yap.next()
+    onExit(yap)
   });
 
 program
   .command('state')
   .action(() => {
+    const yap = yapFactory(now, program.file)
     console.log(yap.getStringState())
+    onExit(yap)
   });
 
 program.parse(process.argv)
-
-program.debug && yap.debug()
-yap.persist()
