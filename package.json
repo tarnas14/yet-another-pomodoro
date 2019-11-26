@@ -1,9 +1,11 @@
 {
-  "name": "yap",
+  "name": "yet-another-pomodoro",
   "version": "0.0.1",
   "description": "yet another pomodoro app",
   "main": "index.js",
-  "bin": "./index.js",
+  "bin": {
+    "yap": "./index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
