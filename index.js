@@ -72,7 +72,7 @@ const yapFactory = (now, storageFilePath = path.join(os.homedir(), '.yap')) => {
 
     // state is break, so we are skipping to pomodoro
     if (currentState.inProgress) {
-      current.state = STATE.POMODORO
+      currentState.state = STATE.POMODORO
     }
 
     currentState.start = now
