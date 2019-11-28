@@ -11,7 +11,7 @@ const packageJson = require('./package.json')
 program.version(packageJson.version)
 
 program.option('-d, --debug', 'output extra debugging')
-program.option('-f, --file <file>', 'force file')
+program.option('-f, --file <file>', 'point to a state file (.yap)')
 
 const STATE = {
   POMODORO: 'POMODORO',
@@ -138,6 +138,7 @@ const onExit = yapInstance => {
 
 program
   .command('start')
+  .description('start the pomodoro session - you should only run this when you run the app for the first time or after `restart`')
   .action(() => {
     const yap = yapFactory(now, program.file)
     yap.start()
@@ -146,6 +147,7 @@ program
 
 program
   .command('stop')
+  .description('stop - stops the timer if you are in progress (noop if the app is not counting time)')
   .action(() => {
     const yap = yapFactory(now, program.file)
     yap.stop()
@@ -154,6 +156,7 @@ program
 
 program
   .command('reset')
+  .description('resets the session to the initial state - wipes current timer and resets session counter to 0')
   .action(() => {
     const yap = yapFactory(now, program.file)
     yap.reset()
@@ -162,6 +165,7 @@ program
 
 program
   .command('next')
+  .description('goes to the next interval. however, YOU CAN\'T SKIP POMODORO IN PROGRESS. lets you skip a break and go to productivity period')
   .action(() => {
     const yap = yapFactory(now, program.file)
     yap.next()
@@ -170,6 +174,7 @@ program
 
 program
   .command('outside-pomodoro')
+  .description('does not output anything. check exit code if you are inside the pomodoro or not. 0 means outside pomodoro. 1 you are in pomodoro.')
   .action(() => {
     const yap = yapFactory(now, program.file)
     const result = yap.outsidePomodoro()
@@ -179,6 +184,7 @@ program
 
 program
   .command('state')
+  .description(`get state representation of your pomodoro session. will be in following format: '<STATE> <time left/next period representation>' if you are on a break, coffe emojis will be in the beginning and end of the <time/next period>`)
   .action(() => {
     const yap = yapFactory(now, program.file)
     console.log(yap.getStringState())
