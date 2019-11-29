@@ -15,7 +15,7 @@ program.option('-f, --file <file>', 'point to a state file (.yap)')
 
 const STATE = {
   POMODORO: 'POMODORO',
-  BREAK: 'BREAK_SHORT',
+  BREAK: 'BREAK',
 }
 
 const defaultState = {
@@ -44,16 +44,16 @@ const calculateState = (now, persistence) => {
   return current
 }
 
-const getDurationInMilliseconds = state => {
-  if (state === STATE.POMODORO) {
+const getDurationInMilliseconds = currentState => {
+  if (currentState.state === STATE.POMODORO) {
     return 25 * 60 * 1000
   }
 
-  const long = state.sessionCounter % 8
+  const long = currentState.sessionCounter % 8
 
   return long
-    ? 15 * 60 * 1000
-    : 5 * 60 * 1000
+    ? 5 * 60 * 1000
+    : 15 * 60 * 1000
 }
 
 const yapFactory = (now, storageFilePath = path.join(os.homedir(), '.yap')) => {
@@ -76,7 +76,7 @@ const yapFactory = (now, storageFilePath = path.join(os.homedir(), '.yap')) => {
     }
 
     currentState.start = now
-    currentState.end = now + getDurationInMilliseconds(currentState.state)
+    currentState.end = now + getDurationInMilliseconds(currentState)
   }
 
   const start = () => {
@@ -188,7 +188,6 @@ program
   .action(() => {
     const yap = yapFactory(now, program.file)
     console.log(yap.getStringState())
-    onExit(yap)
   });
 
 program.parse(process.argv)
