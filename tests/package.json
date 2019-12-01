@@ -1,0 +1,20 @@
+{
+  "name": "yet-another-pomodoro-tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "babel-node tests.js | faucet",
+    "test-watch": "nodemon -x 'npm t'"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.7.4",
+    "@babel/node": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "faucet": "0.0.1",
+    "nodemon": "^1.18.11",
+    "tape": "^4.10.1"
+  }
+}
