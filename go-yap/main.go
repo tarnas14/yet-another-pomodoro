@@ -11,6 +11,8 @@ import (
   "github.com/urfave/cli"
 )
 
+const DEFAULT_FILE_PATH = "/home/tarnas/.yap"
+
 func fileExists(filename string) bool {
   info, err := os.Stat(filename)
   if os.IsNotExist(err) {
@@ -156,17 +158,27 @@ func getStringState(currentState *PomodoroState, now int64) string {
 
 func main() {
   var now = time.Now().Unix() * 1000
+  var filePath string
+
   app := cli.NewApp()
 
-  const DEFAULT_FILE_PATH = "/home/tarnas/.yap"
+  fileFlag := cli.StringFlag{
+    Name: "file",
+    Value: DEFAULT_FILE_PATH,
+    Destination: &filePath,
+  }
 
-  currentState := getCurrentState(now, DEFAULT_FILE_PATH)
+  app.Flags = []cli.Flag {
+    &fileFlag,
+  }
 
-  app.Commands = []*cli.Command{
-  {
+  app.Commands = []cli.Command{
+    {
       Name:    "state",
       Usage:   "",
       Action:  func(c *cli.Context) error {
+        currentState := getCurrentState(now, filePath)
+
         var state = getStringState(currentState, now)
 
         fmt.Println(state)
@@ -178,9 +190,11 @@ func main() {
       Name:    "next",
       Usage:   "",
       Action:  func(c *cli.Context) error {
+        currentState := getCurrentState(now, filePath)
+
         next(currentState, now)
 
-        persist(currentState, DEFAULT_FILE_PATH)
+        persist(currentState, filePath)
 
         return nil
       },
@@ -189,9 +203,11 @@ func main() {
       Name:    "stop",
       Usage:   "",
       Action:  func(c *cli.Context) error {
+        currentState := getCurrentState(now, filePath)
+
         stop(currentState)
 
-        persist(currentState, DEFAULT_FILE_PATH)
+        persist(currentState, filePath)
 
         return nil
       },
@@ -200,9 +216,11 @@ func main() {
       Name:    "start",
       Usage:   "",
       Action:  func(c *cli.Context) error {
+        currentState := getCurrentState(now, filePath)
+
         start(currentState, now)
 
-        persist(currentState, DEFAULT_FILE_PATH)
+        persist(currentState, filePath)
 
         return nil
       },
@@ -211,9 +229,11 @@ func main() {
       Name:    "reset",
       Usage:   "",
       Action:  func(c *cli.Context) error {
+        currentState := getCurrentState(now, filePath)
+
         reset(currentState)
 
-        persist(currentState, DEFAULT_FILE_PATH)
+        persist(currentState, filePath)
 
         return nil
       },
@@ -222,6 +242,8 @@ func main() {
       Name:    "outside-pomodoro",
       Usage:   "",
       Action:  func(c *cli.Context) error {
+        currentState := getCurrentState(now, filePath)
+
         if (currentState.State == STATE_POMODORO && currentState.inProgress) {
           return cli.NewExitError("in pomodoro", 1)
         }
