@@ -33,13 +33,6 @@ type PomodoroState struct {
   finished bool
 }
 
-type PomodoroPersistedState struct {
-  SessionCounter int `json:"sessionCounter"`
-  State string `json:"state"`
-  Start int64 `json:"start"`
-  End int64 `json:"end"`
-}
-
 const STATE_POMODORO string = "POMODORO"
 const STATE_BREAK string = "BREAK"
 
@@ -79,14 +72,7 @@ func getCurrentState(now int64, path string) *PomodoroState {
 }
 
 func persist(currentState *PomodoroState, path string) {
-  data := PomodoroPersistedState{
-    SessionCounter: currentState.SessionCounter,
-    State: currentState.State,
-    Start: currentState.Start,
-    End: currentState.End,
-  }
-
-  file,_ := json.MarshalIndent(data, "", " ")
+  file,_ := json.MarshalIndent(currentState, "", " ")
   _ = ioutil.WriteFile(path, file, 0644)
 }
 
