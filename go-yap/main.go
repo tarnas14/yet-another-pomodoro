@@ -145,7 +145,7 @@ func getStringState(currentState *PomodoroState, now int64) string {
 
   var timeLeft = ""
   if (currentState.inProgress) {
-    var dur,_ = time.ParseDuration(fmt.Sprintf("%ds", currentState.End - now))
+    var dur,_ = time.ParseDuration(fmt.Sprintf("%ds", (currentState.End / 1000) - (now / 1000)))
     timeLeft = dur.String()
   } else {
     timeLeft = fmt.Sprintf("☕%c%d☕", currentState.State[0], currentState.SessionCounter)
