@@ -1,6 +1,7 @@
 package main
 
 import (
+  "math"
   "time"
   "os"
   "fmt"
@@ -12,6 +13,7 @@ import (
 )
 
 const DEFAULT_FILE_PATH = "/home/tarnas/.yap"
+const COFFEE_EMOJI = "☕"
 
 func fileExists(filename string) bool {
   info, err := os.Stat(filename)
@@ -145,12 +147,32 @@ func getStringState(currentState *PomodoroState, now int64) string {
     waitingPart = "WAITING_FOR_"
   }
 
+  var emojiOrNot = ""
+  if (currentState.State == STATE_BREAK) {
+    emojiOrNot = COFFEE_EMOJI
+  }
+
   var timeLeft = ""
   if (currentState.inProgress) {
-    var dur,_ = time.ParseDuration(fmt.Sprintf("%ds", (currentState.End / 1000) - (now / 1000)))
-    timeLeft = dur.String()
+    // TODO this `+1` is here because of different JS implementation, should probably fix?
+    var dur,_ = time.ParseDuration(fmt.Sprintf("%dms", currentState.End - now + 1))
+
+    var durationInSeconds = dur.Seconds()
+    var minutes = int(math.Floor(durationInSeconds / 60))
+    var seconds = int(durationInSeconds) - (minutes * 60)
+
+    var minutesString = fmt.Sprintf("%d", minutes)
+
+    var separatorString = ":"
+
+    var secondsString = fmt.Sprintf("%d", seconds)
+    if (seconds < 10) {
+      secondsString = fmt.Sprintf("0%d", seconds)
+    }
+
+    timeLeft = fmt.Sprintf("%s%s%s%s%s", emojiOrNot, minutesString, separatorString, secondsString, emojiOrNot)
   } else {
-    timeLeft = fmt.Sprintf("☕%c%d☕", currentState.State[0], currentState.SessionCounter)
+    timeLeft = fmt.Sprintf("%s%c%d%s", emojiOrNot, currentState.State[0], currentState.SessionCounter, emojiOrNot)
   }
 
   return fmt.Sprintf("%s%s %s", waitingPart, currentState.State, timeLeft)

@@ -111,10 +111,14 @@ const yapFactory = (now, storageFilePath = path.join(os.homedir(), '.yap')) => {
   }
 
   const getStringState = () => {
-    return `${!currentState.inProgress ? 'WAITING_FOR_' : ''}${currentState.state} ${currentState.inProgress
+    const emoji = currentState.state === 'BREAK'
+      ? '☕'
+      : ''
+
+    return `${!currentState.inProgress ? 'WAITING_FOR_' : ''}${currentState.state} ${emoji}${currentState.inProgress
       ? `${humanizeDuration(currentState.end - now, {colonNotation: true, secondsDecimalDigits: 0})}`
-      : `☕${currentState.state[0]}${currentState.sessionCounter}☕`
-    }`
+      : `${currentState.state[0]}${currentState.sessionCounter}`
+    }${emoji}`
   }
 
   return {

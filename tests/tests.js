@@ -5,7 +5,7 @@ import test from 'tape'
 import nrc from 'node-run-cmd'
 
 const COFFEE_EMOJI = '☕'
-const TEST_FILE_PATH = path.join(__dirname, "./yap-test-file")
+const TEST_FILE_PATH = path.join(__dirname, './yap-test-file')
 
 const removeTestFile = () => fs.existsSync(TEST_FILE_PATH) && fs.unlinkSync(TEST_FILE_PATH)
 
@@ -19,7 +19,13 @@ const teardown = () => {
 
 const withoutNewLine = data => data.replace(/\n/g, '')
 
-const tests = (runYap, prefix) => {
+const tests = async (runYap, {
+  prefix,
+  filePath,
+  before = () => {}
+}) => {
+  await before();
+
   test(prefix + 'should get initial state and not create the file when `state` is called', async t => {
     setup()
 
@@ -33,7 +39,7 @@ const tests = (runYap, prefix) => {
 
     // then
     t.deepEqual(exitCodes, [ 0 ])
-    t.equal(output, `WAITING_FOR_POMODORO ${COFFEE_EMOJI}P1${COFFEE_EMOJI}`)
+    t.equal(output, `WAITING_FOR_POMODORO P1`)
     t.false(fs.existsSync(TEST_FILE_PATH))
 
     t.end()
@@ -114,7 +120,7 @@ const tests = (runYap, prefix) => {
 
     // then
     t.deepEqual(exitCodes, [ 0 ])
-    t.equal(output, `WAITING_FOR_POMODORO ${COFFEE_EMOJI}P1${COFFEE_EMOJI}`)
+    t.equal(output, `WAITING_FOR_POMODORO P1`)
     t.true(fs.existsSync(TEST_FILE_PATH))
 
     t.end()
@@ -144,9 +150,9 @@ const tests = (runYap, prefix) => {
     // then
     t.deepEqual(exitCodeAfterPomodoroStart, [1], 'should exit with 1 after start')
 
-    // TODO make node-yap output these to std:error
+    // TODO make node-yap output this to std:error
     if (errorsWhenInPomodoro.length) {
-      t.deepEqual(errorsWhenInPomodoro, ['in pomodoro', 'exit status 1'])
+      t.deepEqual(errorsWhenInPomodoro, ['in pomodoro'])
     }
 
     // when
@@ -162,12 +168,79 @@ const tests = (runYap, prefix) => {
     t.end()
     teardown()
   })
+
+  const fileGetter = (template, endPlus = 10001) => () => {
+    const jsTimestamp = (new Date()).getTime()
+
+    return {
+      start: jsTimestamp - 1,
+      end: jsTimestamp + endPlus,
+      ...template,
+    }
+  }
+
+  const testcases = [
+    {
+      file: fileGetter({'sessionCounter':8,'state':'POMODORO'}),
+      expected: 'POMODORO 0:10',
+    },
+    {
+      file: fileGetter({'sessionCounter':8,'state':'POMODORO'}, 120001),
+      expected: 'POMODORO 2:00',
+    },
+    {
+      file: fileGetter({'sessionCounter':8,'state':'POMODORO'}, 121001),
+      expected: 'POMODORO 2:01',
+    },
+    {
+      file: fileGetter({'sessionCounter':8,'state':'POMODORO',start:0,end:0}),
+      expected: `WAITING_FOR_POMODORO P8`,
+    },
+    {
+      file: fileGetter({'sessionCounter':9,'state':'BREAK'}),
+      expected: `BREAK ${COFFEE_EMOJI}0:10${COFFEE_EMOJI}`,
+    },
+    {
+      file: fileGetter({'sessionCounter':8,'state':'BREAK'}, 120001),
+      expected: `BREAK ${COFFEE_EMOJI}2:00${COFFEE_EMOJI}`,
+    },
+    {
+      file: fileGetter({'sessionCounter':8,'state':'BREAK'}, 121001),
+      expected: `BREAK ${COFFEE_EMOJI}2:01${COFFEE_EMOJI}`,
+    },
+    {
+      file: fileGetter({'sessionCounter':9,'state':'BREAK','start':0,'end':0}),
+      expected: `WAITING_FOR_BREAK ${COFFEE_EMOJI}B9${COFFEE_EMOJI}`
+    },
+  ]
+
+  testcases.forEach((testcase, index) => test(prefix + `should correctly show state based on file with JS unix-like timestamps [${index}]`, async t => {
+    setup()
+
+    fs.writeFileSync(filePath, JSON.stringify(testcase.file()))
+
+    let output = ''
+    const exitCodes = await runYap(`state`, {
+      onData: data => { output = withoutNewLine(data) },
+      onError: t.fail,
+    })
+
+    t.equal(output, testcase.expected)
+
+    t.end()
+    teardown()
+  }))
 }
 
 const runYapFactory = (command, file, commandOptions = {}) => (yapCommand, options) => nrc.run(`${command} --file ${file} ${yapCommand}`, {...commandOptions, ...options})
 
-tests(runYapFactory('node ../node-yap/index.js', TEST_FILE_PATH), 'node-yap: ')
-tests(runYapFactory('go run ./main.go', TEST_FILE_PATH, {cwd: '../go-yap'}), 'go-yap: ')
+tests(runYapFactory('node ../node-yap/index.js', TEST_FILE_PATH), {
+  prefix: 'node-yap: ',
+  filePath: TEST_FILE_PATH,
+})
 
-// make sure file is removed
-removeTestFile()
+tests(runYapFactory('./main', TEST_FILE_PATH, {cwd: '../go-yap'}), {
+  prefix: 'go-yap: ',
+  filePath: TEST_FILE_PATH,
+  before: () => nrc.run(`go build ./main.go`, {cwd: '../go-yap'})
+})
